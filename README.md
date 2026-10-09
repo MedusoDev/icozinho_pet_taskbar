@@ -41,6 +41,10 @@ mais simples e com a gema igual à do [portfólio](https://gabrielbarros-portfol
   rodando um comando), pula chamando quando o Claude precisa de você, comemora
   quando termina e fica tonto se der erro. Vale para o terminal e para a aba
   Code do app Claude. Veja [Claude Code](#claude-code).
+- **Aprova e responde pelo Icozinho**: quando o Claude Code pede permissão, um
+  cartão em cima da gema mostra o que ele quer fazer (o comando inteiro, o
+  arquivo) com **Permitir**, **Negar** e **No terminal**. Perguntas de múltipla
+  escolha aparecem com as opções como botões, uma pergunta por vez.
 - **Leve**: 30 quadros por segundo andando, 15 dormindo, 60 só quando está no ar
   ou recebendo carinho; escondido, não desenha nada.
 
@@ -56,6 +60,12 @@ evento ao Icozinho por um canal local (named pipe), sem internet.
 - **Para desligar:** bandeja → **Desligar do Claude Code**. Sai só o que é dele.
 - **Nunca trava o Claude Code:** se o Icozinho estiver fechado ou demorar mais
   de 0,3 s, o retransmissor sai em silêncio e o Claude Code segue normalmente.
+- **Só decide com o seu clique:** sem resposta em 110 s, ou com "No terminal",
+  o Claude Code pergunta no terminal como sempre. Se você responder no
+  terminal, o cartão some sozinho. Respostas que não batem com a pergunta são
+  descartadas.
+- Quem ligou numa versão anterior vê **Atualizar ligação ao Claude Code…** na
+  bandeja.
 - Precisa do **Node** instalado (é ele que roda o retransmissor).
 
 ## Stack
@@ -101,6 +111,7 @@ src/
     chao.js        onde é o chão em cada ponto
     efeitos.js     corações, zzz e estrelinhas
     agente.js      o balão e as reações ao Claude Code
+    cartao.js      o cartão de permissão e de pergunta
 assets/         ícones do app, do instalador e da bandeja
 ```
 

@@ -21,12 +21,15 @@ const EVENTOS = {
   PreToolUse: 5,
   PostToolUse: 5,
   PostToolUseFailure: 5,
-  PermissionRequest: 5,
+  PermissionRequest: 120, // espera você permitir ou negar pelo Icozinho
   Notification: 5,
   Stop: 5,
   StopFailure: 5,
   SessionEnd: 5,
 };
+/** As perguntas de múltipla escolha têm um gancho só delas, que espera a resposta. */
+const TEMPO_PERGUNTA = 135;
+const MARCA_PERGUNTA = '--pergunta';
 
 /**
  * O retransmissor precisa morar fora do pacote do app (o Node não lê de
@@ -93,15 +96,26 @@ function semIcozinho(hooks = {}) {
   return limpo;
 }
 
-function estaInstalado() {
+/**
+ * 'atual', 'desatualizado' (ligado por uma versão anterior, sem o gancho das
+ * perguntas ou com o tempo curto na permissão) ou null (desligado).
+ */
+function estado() {
+  let hooks;
   try {
-    const hooks = lerConfiguracao().hooks || {};
-    return Object.values(hooks).some(
-      (grupos) => Array.isArray(grupos) && grupos.some((g) => Array.isArray(g.hooks) && g.hooks.some(ehDoIcozinho))
-    );
+    hooks = lerConfiguracao().hooks || {};
   } catch {
-    return false;
+    return null;
   }
+  const doIcozinho = (evento) =>
+    (Array.isArray(hooks[evento]) ? hooks[evento] : []).flatMap((g) =>
+      Array.isArray(g.hooks) ? g.hooks.filter(ehDoIcozinho).map((h) => ({ ...h, matcher: g.matcher })) : []
+    );
+  const algum = Object.keys(hooks).some((evento) => doIcozinho(evento).length > 0);
+  if (!algum) return null;
+  const temPergunta = doIcozinho('PreToolUse').some((h) => (h.args || []).includes(MARCA_PERGUNTA));
+  const permissaoEspera = doIcozinho('PermissionRequest').some((h) => (h.timeout || 0) >= EVENTOS.PermissionRequest);
+  return temPergunta && permissaoEspera ? 'atual' : 'desatualizado';
 }
 
 /** As entradas que o Icozinho adiciona, para mostrar antes de escrever. */
@@ -111,6 +125,10 @@ function entradasDoIcozinho(retransmissor) {
   for (const [evento, tempo] of Object.entries(EVENTOS)) {
     entradas[evento] = [{ hooks: [{ type: 'command', command: node, args: [retransmissor], timeout: tempo }] }];
   }
+  entradas.PreToolUse.push({
+    matcher: 'AskUserQuestion',
+    hooks: [{ type: 'command', command: node, args: [retransmissor, MARCA_PERGUNTA], timeout: TEMPO_PERGUNTA }],
+  });
   return entradas;
 }
 
@@ -142,7 +160,7 @@ module.exports = {
   arquivoDoClaude,
   prepararRetransmissor,
   entradasDoIcozinho,
-  estaInstalado,
+  estado,
   instalar,
   desinstalar,
 };

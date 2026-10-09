@@ -101,7 +101,11 @@ export function ligarAgente(pet) {
         pet.reagir('trabalhando');
         mostrar(projeto, descreverPasso(ev.tool_name, ev.tool_input), { tipo: 'trabalhando' });
         break;
+      case 'PostToolUse':
+        pet.reagir('trabalhando'); // passou do pedido (se havia um): de volta ao trabalho
+        break;
       case 'PostToolUseFailure':
+        pet.reagir('trabalhando');
         if (!ev.is_interrupt) mostrar(projeto, `Falhou: ${descreverPasso(ev.tool_name, ev.tool_input)}`, { tipo: 'aviso' });
         break;
       case 'PermissionRequest':

@@ -143,11 +143,70 @@ async function desligarClaude() {
   }
 }
 
-/** Cada evento do Claude Code vai direto para o pet reagir. */
-function aoEventoDoClaude(evento, conexao) {
-  conexao.end(); // na 0.2.0 ninguém espera resposta
-  if (janela && !janela.isDestroyed()) janela.webContents.send('agente', evento);
+/*
+ * Pedidos esperando você: permissões e perguntas. Cada um segura a conexão
+ * do retransmissor aberta até você decidir no balão. Se a conexão cair (o
+ * tempo acabou, ou você respondeu no terminal e o Claude seguiu), o pedido
+ * some do Icozinho.
+ */
+const pedidos = new Map();
+let proximoPedido = 1;
+
+const EVENTOS_DE_AVANCO = ['PostToolUse', 'PostToolUseFailure', 'UserPromptSubmit', 'Stop', 'StopFailure', 'SessionEnd'];
+const seguiuEmFrente = (evento) =>
+  !evento.icozinho_espera &&
+  (EVENTOS_DE_AVANCO.includes(evento.hook_event_name) ||
+    (evento.hook_event_name === 'PreToolUse' && evento.tool_name !== 'AskUserQuestion'));
+
+const avisarPet = (canalIpc, dados) => {
+  if (janela && !janela.isDestroyed()) janela.webContents.send(canalIpc, dados);
+};
+
+function encerrarPedido(id, resposta) {
+  const pedido = pedidos.get(id);
+  if (!pedido) return;
+  pedidos.delete(id);
+  if (resposta && !pedido.conexao.destroyed) pedido.conexao.end(JSON.stringify(resposta) + '\n');
+  else pedido.conexao.destroy();
+  avisarPet('pedido-encerrado', id);
 }
+
+/** Cada evento do Claude Code vai para o pet reagir; pedidos ficam esperando. */
+function aoEventoDoClaude(evento, conexao) {
+  // Se a mesma sessão andou para a frente, o pedido que estava esperando já
+  // foi respondido no terminal. Só contam eventos que provam isso: o aviso
+  // "esperando permissão" e o gancho geral da própria pergunta chegam junto
+  // com o pedido e não podem derrubá-lo.
+  if (seguiuEmFrente(evento)) {
+    for (const [id, pedido] of pedidos) {
+      if (pedido.sessao === evento.session_id) encerrarPedido(id);
+    }
+  }
+
+  if (!evento.icozinho_espera) {
+    conexao.end();
+    avisarPet('agente', evento);
+    return;
+  }
+
+  const id = proximoPedido++;
+  pedidos.set(id, { conexao, sessao: evento.session_id });
+  conexao.on('close', () => {
+    if (pedidos.has(id)) {
+      pedidos.delete(id);
+      avisarPet('pedido-encerrado', id);
+    }
+  });
+  avisarPet('agente', evento); // o pet também reage: "precisa de você"
+  avisarPet('pedido', { id, tipo: evento.icozinho_espera, evento });
+}
+
+// O balão manda a decisão: permitir, negar, responder ou "no terminal".
+ipcMain.on('decidir', (_e, { id, decisao, respostas }) => {
+  if (!pedidos.has(id)) return;
+  if (decisao === 'terminal') return encerrarPedido(id); // sem decisão: o terminal pergunta
+  encerrarPedido(id, { decisao, respostas });
+});
 
 app.whenReady().then(() => {
   prefs = preferencias.ler();
@@ -160,7 +219,7 @@ app.whenReady().then(() => {
     alternarVisivel,
     iniciaComWindows: () => prefs.iniciarComWindows,
     definirInicio,
-    ligadoAoClaude: () => ganchos.estaInstalado(),
+    ligadoAoClaude: () => ganchos.estado(),
     ligarClaude,
     desligarClaude,
     sair: () => app.quit(),

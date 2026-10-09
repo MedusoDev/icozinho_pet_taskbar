@@ -37,9 +37,15 @@ export function ligarMouse(pet, raio, acoes) {
     window.icozinho.capturarMouse(sim);
   }
 
+  // Botões do cartão (e o que mais for .clicavel) também precisam do mouse.
+  const sobreClicavel = (e) => {
+    const alvo = document.elementFromPoint(e.clientX, e.clientY);
+    return Boolean(alvo && alvo.closest('.clicavel'));
+  };
+
   window.addEventListener('mousemove', (e) => {
     const agora = performance.now();
-    capturar(arrastando || Boolean(apertado) || emCima(e));
+    capturar(arrastando || Boolean(apertado) || emCima(e) || sobreClicavel(e));
 
     if (apertado && !arrastando && Math.hypot(e.clientX - apertado.x, e.clientY - apertado.y) > LIMIAR_ARRASTO_PX) {
       arrastando = true;

@@ -9,7 +9,7 @@ const path = require('path');
  * @param {() => void} acoes.alternarVisivel
  * @param {() => boolean} acoes.iniciaComWindows
  * @param {(ligado: boolean) => void} acoes.definirInicio
- * @param {() => boolean} acoes.ligadoAoClaude
+ * @param {() => ('atual'|'desatualizado'|null)} acoes.ligadoAoClaude
  * @param {() => Promise<void>} acoes.ligarClaude
  * @param {() => Promise<void>} acoes.desligarClaude
  * @param {() => void} acoes.sair
@@ -20,6 +20,22 @@ function criarBandeja(acoes) {
     .resize({ width: 16, height: 16 });
   const bandeja = new Tray(icone);
   bandeja.setToolTip('Icozinho');
+
+  const reabrirDepois = (acao) => async () => {
+    await acao();
+    bandeja.setContextMenu(montarMenu());
+  };
+
+  /** Ligar, atualizar (ligado por uma versão anterior) ou desligar. */
+  function itensDoClaude() {
+    const estado = acoes.ligadoAoClaude();
+    if (!estado) return [{ label: 'Ligar ao Claude Code…', click: reabrirDepois(acoes.ligarClaude) }];
+    const desligar = { label: 'Desligar do Claude Code', click: reabrirDepois(acoes.desligarClaude) };
+    if (estado === 'desatualizado') {
+      return [{ label: 'Atualizar ligação ao Claude Code…', click: reabrirDepois(acoes.ligarClaude) }, desligar];
+    }
+    return [desligar];
+  }
 
   const montarMenu = () =>
     Menu.buildFromTemplate([
@@ -39,21 +55,7 @@ function criarBandeja(acoes) {
         click: (item) => acoes.definirInicio(item.checked),
       },
       { type: 'separator' },
-      acoes.ligadoAoClaude()
-        ? {
-            label: 'Desligar do Claude Code',
-            click: async () => {
-              await acoes.desligarClaude();
-              bandeja.setContextMenu(montarMenu());
-            },
-          }
-        : {
-            label: 'Ligar ao Claude Code…',
-            click: async () => {
-              await acoes.ligarClaude();
-              bandeja.setContextMenu(montarMenu());
-            },
-          },
+      ...itensDoClaude(),
       { type: 'separator' },
       { label: 'Sair', click: acoes.sair },
     ]);
