@@ -48,7 +48,7 @@ function prepararRetransmissor() {
 function caminhoDoNode() {
   try {
     const comando = process.platform === 'win32' ? 'where' : 'which';
-    const saida = execFileSync(comando, ['node'], { encoding: 'utf8', windowsHide: true });
+    const saida = execFileSync(comando, ['node'], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     return saida.split(/\r?\n/).find((l) => l.trim()) || 'node';
   } catch {
     return 'node';
@@ -157,6 +157,7 @@ function desinstalar() {
 }
 
 module.exports = {
+  caminhoDoNode,
   arquivoDoClaude,
   prepararRetransmissor,
   entradasDoIcozinho,

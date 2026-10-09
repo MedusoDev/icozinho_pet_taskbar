@@ -69,7 +69,6 @@
       white-space: nowrap;
     }
     #balao.visivel { opacity: 1; }
-    body.com-cartao #balao { display: none; }
     #balao .projeto {
       display: block;
       font: 600 9.5px/1.2 'Cascadia Mono', Consolas, monospace;
@@ -83,66 +82,6 @@
     #balao[data-tipo='precisa'] { border-color: rgba(251, 191, 36, 0.8); box-shadow: 0 0 22px rgba(217, 119, 6, 0.45); }
     #balao[data-tipo='terminou'] { border-color: rgba(52, 211, 153, 0.7); }
     #balao[data-tipo='erro'], #balao[data-tipo='aviso'] { border-color: rgba(244, 80, 94, 0.75); }
-
-    /* O cartão de permissão ou pergunta, clicável */
-    #cartao {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 300px;
-      max-height: 230px;
-      overflow: hidden;
-      box-sizing: border-box;
-      padding: 10px 12px 11px;
-      border-radius: 16px;
-      background: rgba(17, 12, 28, 0.96);
-      border: 1px solid rgba(251, 191, 36, 0.8);
-      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 24px rgba(217, 119, 6, 0.35);
-      color: #ede9fe;
-      font: 500 12.5px/1.35 'Segoe UI', sans-serif;
-      display: none;
-    }
-    #cartao.visivel { display: block; }
-    #cartao .projeto {
-      display: block;
-      font: 600 9.5px/1.2 'Cascadia Mono', Consolas, monospace;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #fbbf24;
-      margin-bottom: 3px;
-    }
-    #cartao .titulo { display: block; font-size: 13px; margin-bottom: 6px; }
-    #cartao .detalhe {
-      display: block;
-      max-height: 48px;
-      overflow: hidden;
-      padding: 5px 7px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.06);
-      font: 11px/1.35 'Cascadia Mono', Consolas, monospace;
-      color: #ddd6fe;
-      word-break: break-all;
-    }
-    #cartao .opcoes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-    #cartao .acoes { display: flex; gap: 6px; }
-    #cartao .botao {
-      border: 1px solid rgba(167, 139, 250, 0.5);
-      border-radius: 999px;
-      padding: 5px 12px;
-      background: rgba(124, 58, 237, 0.12);
-      color: #ede9fe;
-      font: 600 12px 'Segoe UI', sans-serif;
-      cursor: pointer;
-    }
-    #cartao .botao:hover { background: rgba(124, 58, 237, 0.3); }
-    #cartao .botao:disabled { opacity: 0.4; cursor: default; }
-    #cartao .primario { background: #7c3aed; border-color: #8b5cf6; color: #fff; }
-    #cartao .primario:hover { background: #8b5cf6; }
-    #cartao .perigo { border-color: rgba(244, 80, 94, 0.7); background: rgba(244, 80, 94, 0.12); }
-    #cartao .perigo:hover { background: rgba(244, 80, 94, 0.3); }
-    #cartao .discreto { border-color: transparent; background: transparent; color: #a1a1aa; margin-left: auto; }
-    #cartao .opcao.marcada { background: #d97706; border-color: #f59e0b; color: #fff; }
 
     #zzz { inset: auto; display: none; width: 40px; height: 40px; }
     #zzz.visivel { display: block; }
@@ -169,7 +108,6 @@
   <div id="efeitos"></div>
   <div id="zzz"><span>z</span><span>z</span><span>z</span></div>
   <div id="balao"><span class="projeto"></span><span class="texto"></span></div>
-  <div id="cartao" class="clicavel"></div>
   <script type="module" src="pet.js"></script>
 </body>
 </html>

@@ -122,12 +122,16 @@ function pedirDecisao(mensagem, esperaMs) {
  * respondida, com rótulos que existem, e lista só onde a pergunta é de
  * múltipla escolha. Qualquer coisa fora disso: o terminal pergunta.
  */
-function respostasValidas(perguntas, respostas) {
+function respostasValidas(perguntas, respostas, livres = []) {
   if (!Array.isArray(perguntas) || !respostas || typeof respostas !== 'object') return false;
   if (perguntas.length === 0 || perguntas.length !== Object.keys(respostas).length) return false;
   return perguntas.every((p) => {
     const rotulos = (p.options || []).map((o) => o.label);
     const escolha = respostas[p.question];
+    // "Outro…": resposta escrita por você, no lugar das opções
+    if (Array.isArray(livres) && livres.includes(p.question)) {
+      return typeof escolha === 'string' && escolha.trim().length > 0 && escolha.length <= 1000;
+    }
     if (p.multiSelect) {
       return (
         Array.isArray(escolha) &&
@@ -159,7 +163,7 @@ function saidaDaDecisao(tipo, decisao, evento) {
   }
   if (tipo === 'pergunta' && decisao.decisao === 'responder') {
     const entrada = evento.tool_input || {};
-    if (!respostasValidas(entrada.questions, decisao.respostas)) return null;
+    if (!respostasValidas(entrada.questions, decisao.respostas, decisao.livres)) return null;
     return {
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
@@ -172,6 +176,13 @@ function saidaDaDecisao(tipo, decisao, evento) {
 }
 
 async function principal() {
+  // A conversa da doca também é uma sessão do Claude Code. Os ganchos gerais
+  // a ignoram (o Icozinho não precisa se ver conversando); só o gancho da
+  // pasta da conversa (--conversa) passa, e só para pedir permissão: o
+  // cartão aparece dentro da aba Conversa.
+  const daConversa = process.env.ICOZINHO_CONVERSA === '1';
+  const modoConversa = process.argv.includes('--conversa');
+  if (daConversa !== modoConversa) return;
   const modoPergunta = process.argv.includes('--pergunta');
 
   let evento;
@@ -197,6 +208,11 @@ async function principal() {
     // de onde veio: a sessão da aba Code do app Claude ou um terminal
     icozinho_origem: process.env.CLAUDE_CODE_ENTRYPOINT || 'terminal',
   };
+
+  if (modoConversa) {
+    if (tipo !== 'permissao') return; // da conversa, só os pedidos de permissão
+    mensagem.icozinho_conversa = true;
+  }
 
   if (!tipo) {
     if (modoPergunta) return; // o gancho geral já avisou este evento

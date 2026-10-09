@@ -1,18 +1,20 @@
-// BANDEJA — o ícone perto do relógio. É por ali que se esconde, mostra,
-// liga o "iniciar com o Windows" e fecha o Icozinho.
+// BANDEJA — o ícone perto do relógio: abrir a doca, soltar ou prender o pet
+// na barra, iniciar com o Windows, ligar ao Claude Code e sair.
 const { Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
 
 /**
  * @param {object} acoes
- * @param {() => boolean} acoes.estaVisivel
- * @param {() => void} acoes.alternarVisivel
+ * @param {() => void} acoes.abrirIlha
+ * @param {() => boolean} acoes.petNaBarra
+ * @param {(ligado: boolean) => void} acoes.definirPetNaBarra
  * @param {() => boolean} acoes.iniciaComWindows
  * @param {(ligado: boolean) => void} acoes.definirInicio
  * @param {() => ('atual'|'desatualizado'|null)} acoes.ligadoAoClaude
  * @param {() => Promise<void>} acoes.ligarClaude
  * @param {() => Promise<void>} acoes.desligarClaude
  * @param {() => void} acoes.sair
+ * @returns {{ atualizar: () => void }}
  */
 function criarBandeja(acoes) {
   const icone = nativeImage
@@ -21,32 +23,26 @@ function criarBandeja(acoes) {
   const bandeja = new Tray(icone);
   bandeja.setToolTip('Icozinho');
 
-  const reabrirDepois = (acao) => async () => {
-    await acao();
-    bandeja.setContextMenu(montarMenu());
-  };
-
   /** Ligar, atualizar (ligado por uma versão anterior) ou desligar. */
   function itensDoClaude() {
     const estado = acoes.ligadoAoClaude();
-    if (!estado) return [{ label: 'Ligar ao Claude Code…', click: reabrirDepois(acoes.ligarClaude) }];
-    const desligar = { label: 'Desligar do Claude Code', click: reabrirDepois(acoes.desligarClaude) };
+    if (!estado) return [{ label: 'Ligar ao Claude Code…', click: acoes.ligarClaude }];
+    const desligar = { label: 'Desligar do Claude Code', click: acoes.desligarClaude };
     if (estado === 'desatualizado') {
-      return [{ label: 'Atualizar ligação ao Claude Code…', click: reabrirDepois(acoes.ligarClaude) }, desligar];
+      return [{ label: 'Atualizar ligação ao Claude Code…', click: acoes.ligarClaude }, desligar];
     }
     return [desligar];
   }
 
   const montarMenu = () =>
     Menu.buildFromTemplate([
-      { label: 'Icozinho', enabled: false },
+      { label: 'Abrir o Icozinho', click: acoes.abrirIlha },
       { type: 'separator' },
       {
-        label: acoes.estaVisivel() ? 'Esconder' : 'Mostrar',
-        click: () => {
-          acoes.alternarVisivel();
-          bandeja.setContextMenu(montarMenu());
-        },
+        label: 'Pet solto na barra de tarefas',
+        type: 'checkbox',
+        checked: acoes.petNaBarra(),
+        click: (item) => acoes.definirPetNaBarra(item.checked),
       },
       {
         label: 'Iniciar com o Windows',
@@ -61,12 +57,10 @@ function criarBandeja(acoes) {
     ]);
 
   bandeja.setContextMenu(montarMenu());
-  // Clique duplo no ícone: esconde ou mostra, sem abrir o menu.
-  bandeja.on('double-click', () => {
-    acoes.alternarVisivel();
-    bandeja.setContextMenu(montarMenu());
-  });
-  return bandeja;
+  // Clique duplo no ícone: abre a doca.
+  bandeja.on('double-click', acoes.abrirIlha);
+
+  return { atualizar: () => bandeja.setContextMenu(montarMenu()) };
 }
 
 module.exports = { criarBandeja };

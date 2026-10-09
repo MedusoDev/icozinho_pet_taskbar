@@ -12,10 +12,8 @@ contextBridge.exposeInMainWorld('icozinho', {
   aoMudarVisivel: (callback) => ipcRenderer.on('visivel', (_e, visivel) => callback(visivel)),
   /** Um evento do Claude Code (hook), já enxuto pelo retransmissor. */
   aoEventoDoAgente: (callback) => ipcRenderer.on('agente', (_e, evento) => callback(evento)),
-  /** Uma permissão ou pergunta esperando você decidir. */
-  aoPedido: (callback) => ipcRenderer.on('pedido', (_e, pedido) => callback(pedido)),
-  /** O pedido foi resolvido (aqui, no terminal, ou o tempo acabou). */
-  aoPedidoEncerrado: (callback) => ipcRenderer.on('pedido-encerrado', (_e, id) => callback(id)),
-  /** A sua decisão: 'permitir', 'negar', 'responder' (com respostas) ou 'terminal'. */
-  decidir: (id, decisao, respostas) => ipcRenderer.send('decidir', { id, decisao, respostas }),
+  /** Quantas permissões e perguntas estão esperando você (o cartão fica na ilha). */
+  aoPendentes: (callback) => ipcRenderer.on('pendentes', (_e, n) => callback(n)),
+  /** Abre o painel da ilha (cutucar o pet com pedido esperando). */
+  abrirIlha: () => ipcRenderer.send('abrir-ilha'),
 });

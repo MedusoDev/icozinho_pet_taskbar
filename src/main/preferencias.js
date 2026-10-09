@@ -5,8 +5,10 @@ const fs = require('fs');
 const path = require('path');
 
 const PADRAO = {
-  visivel: true,
+  visivel: true, // o pet passeando na barra de tarefas
   iniciarComWindows: false,
+  som: true, // sons da doca (pedido chegando, sessão pronta)
+  ladoDaDoca: 'direita', // 'direita', 'esquerda' ou 'topo'
 };
 
 const arquivo = () => path.join(app.getPath('userData'), 'preferencias.json');

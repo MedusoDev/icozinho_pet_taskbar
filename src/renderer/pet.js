@@ -13,7 +13,6 @@ import { chaoEm, definirChao, limites, trechoEm, yDaCena } from './chao.js';
 import { coracao, estrelas, sono } from './efeitos.js';
 import { ligarMouse } from './mouse.js';
 import { ligarAgente, seguirGema } from './agente.js';
-import { ligarCartao, seguirGemaComCartao, temPedido } from './cartao.js';
 
 const RAIO = 26;              // px na tela
 const VELOCIDADE = 55;        // px/s passeando
@@ -159,6 +158,7 @@ window.icozinho.aoMudarVisivel((sim) => {
 ligarMouse(pet, RAIO, {
   cutucar(agora) {
     registrarInput();
+    if (temPedido()) window.icozinho.abrirIlha(); // tem pedido: o clique leva até ele
     if (pet.modo === 'dormindo') return acordar();
     pet.giroVel += 9;
     pet.desdobraExtra = Math.max(pet.desdobraExtra, 0.8);
@@ -231,13 +231,19 @@ const atualizarAgente = ligarAgente({
   },
 });
 
-// Permissão ou pergunta chegando: ele para onde está e chama você.
-ligarCartao(() => {
-  registrarInput();
-  if (pet.modo === 'dormindo') acordar();
-  if (pet.modo === 'passeando') descansar(5000);
-  pet.agente = 'precisa';
+// Permissões e perguntas esperando você (o cartão fica na ilha): enquanto
+// houver alguma, ele chama atenção; cutucar abre a ilha.
+let pendentes = 0;
+window.icozinho.aoPendentes((n) => {
+  if (n > 0 && pendentes === 0) {
+    registrarInput();
+    if (pet.modo === 'dormindo') acordar();
+    if (pet.modo === 'passeando') descansar(5000);
+  }
+  if (n === 0 && pet.agente === 'precisa') pet.agente = 'trabalhando';
+  pendentes = n;
 });
+const temPedido = () => pendentes > 0;
 
 /* ── um quadro ────────────────────────────────────────────────────── */
 
@@ -328,12 +334,11 @@ function atualizar(dt, t, agora) {
   }
 
   // Claude ativo: ele fica parado olhando; precisando de você, pula de tempos
-  // em tempos para chamar atenção. Com o cartão aberto, não pula (você está
-  // tentando clicar nele) e só volta a passear depois que você decidir.
+  // em tempos para chamar atenção, até você decidir na ilha.
   if (temPedido()) pet.agente = 'precisa';
   if (pet.agente && pet.modo === 'parado') pet.pausaAte = Math.max(pet.pausaAte, agora + 1000);
   if (pet.agente === 'trabalhando') pet.giroVel = Math.max(pet.giroVel, 2.2);
-  if (pet.agente === 'precisa' && !temPedido() && emRepouso() && agora > pet.proximoChamado) {
+  if (pet.agente === 'precisa' && emRepouso() && agora > pet.proximoChamado) {
     pet.proximoChamado = agora + 2500;
     pular(180);
   }
@@ -375,7 +380,6 @@ function atualizar(dt, t, agora) {
   sono(dormindo, xDaTela(), yDaTela() - RAIO);
   atualizarAgente(agora);
   seguirGema(xDaTela(), yDaTela() - RAIO);
-  seguirGemaComCartao(xDaTela(), yDaTela() - RAIO);
 }
 
 function quadro() {
