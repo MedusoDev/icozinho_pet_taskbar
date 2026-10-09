@@ -6,7 +6,7 @@
 
 **O icosaendro de estimação que vive na barra de tarefas do Windows.**
 
-**Versão 0.3.0**
+**Versão 0.5.0**
 
 </div>
 

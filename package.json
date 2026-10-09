@@ -1,6 +1,6 @@
 {
   "name": "icozinho_pet_taskbar",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Icozinho: o icosaendro de estimação que vive na barra de tarefas do Windows",
   "main": "src/main/principal.js",
   "private": true,
