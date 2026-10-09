@@ -9,6 +9,9 @@ const path = require('path');
  * @param {() => void} acoes.alternarVisivel
  * @param {() => boolean} acoes.iniciaComWindows
  * @param {(ligado: boolean) => void} acoes.definirInicio
+ * @param {() => boolean} acoes.ligadoAoClaude
+ * @param {() => Promise<void>} acoes.ligarClaude
+ * @param {() => Promise<void>} acoes.desligarClaude
  * @param {() => void} acoes.sair
  */
 function criarBandeja(acoes) {
@@ -35,6 +38,22 @@ function criarBandeja(acoes) {
         checked: acoes.iniciaComWindows(),
         click: (item) => acoes.definirInicio(item.checked),
       },
+      { type: 'separator' },
+      acoes.ligadoAoClaude()
+        ? {
+            label: 'Desligar do Claude Code',
+            click: async () => {
+              await acoes.desligarClaude();
+              bandeja.setContextMenu(montarMenu());
+            },
+          }
+        : {
+            label: 'Ligar ao Claude Code…',
+            click: async () => {
+              await acoes.ligarClaude();
+              bandeja.setContextMenu(montarMenu());
+            },
+          },
       { type: 'separator' },
       { label: 'Sair', click: acoes.sair },
     ]);

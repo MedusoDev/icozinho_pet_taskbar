@@ -12,6 +12,7 @@ import { criarGema } from './gema.js';
 import { chaoEm, definirChao, limites, trechoEm, yDaCena } from './chao.js';
 import { coracao, estrelas, sono } from './efeitos.js';
 import { ligarMouse } from './mouse.js';
+import { ligarAgente, seguirGema } from './agente.js';
 
 const RAIO = 26;              // px na tela
 const VELOCIDADE = 55;        // px/s passeando
@@ -75,6 +76,9 @@ const pet = {
   proximoCoracao: 0,
   cursor: null,
   posicionado: false,
+  // o que o Claude Code está fazendo: null, 'pensando', 'trabalhando', 'precisa'
+  agente: null,
+  proximoChamado: 0,
 };
 
 const agoraMs = () => performance.now();
@@ -192,6 +196,40 @@ function ficarTonto(agora) {
   estrelas(xDaTela(), yDaTela() - RAIO - 6);
 }
 
+/* ── o Claude Code trabalhando ────────────────────────────────────── */
+
+const atualizarAgente = ligarAgente({
+  reagir(tipo) {
+    const agora = agoraMs();
+    registrarInput(); // com o Claude ativo, ele não dorme
+    if (pet.modo === 'dormindo' && tipo !== 'ocioso') acordar();
+    switch (tipo) {
+      case 'pensando':
+      case 'trabalhando':
+        pet.agente = tipo;
+        if (emRepouso()) descansar(20_000); // fica de olho, em vez de passear
+        pet.giroVel = Math.max(pet.giroVel, tipo === 'trabalhando' ? 3 : 1.5);
+        break;
+      case 'precisa':
+        if (pet.agente !== 'precisa' && emRepouso()) pular(260);
+        pet.agente = 'precisa';
+        pet.proximoChamado = agora + 2500;
+        break;
+      case 'terminou':
+        pet.agente = null;
+        pet.felizAte = agora + 1500; // pulinho feliz com corações
+        if (pet.modo !== 'arrastado') pular(320);
+        break;
+      case 'erro':
+        pet.agente = null;
+        ficarTonto(agora);
+        break;
+      default:
+        pet.agente = null;
+    }
+  },
+});
+
 /* ── um quadro ────────────────────────────────────────────────────── */
 
 const relogio = new THREE.Clock();
@@ -280,6 +318,15 @@ function atualizar(dt, t, agora) {
     }
   }
 
+  // Claude ativo: ele fica parado olhando; precisando de você, pula de tempos
+  // em tempos para chamar atenção.
+  if (pet.agente && pet.modo === 'parado') pet.pausaAte = Math.max(pet.pausaAte, agora + 1000);
+  if (pet.agente === 'trabalhando') pet.giroVel = Math.max(pet.giroVel, 2.2);
+  if (pet.agente === 'precisa' && emRepouso() && agora > pet.proximoChamado) {
+    pet.proximoChamado = agora + 2500;
+    pular(180);
+  }
+
   // Carinho: corações e um giro contente.
   if (feliz && agora > pet.proximoCoracao) {
     pet.proximoCoracao = agora + 350;
@@ -304,9 +351,19 @@ function atualizar(dt, t, agora) {
   gema.grupo.scale.setScalar((RAIO / 1.5) * respira);
   gema.atualizar(t, {
     desdobra: (dormindo ? 0.015 : 0.04 + Math.sin(t * 0.7) * 0.02) + pet.desdobraExtra,
-    energia: dormindo ? 0.55 + Math.sin(t * 1.2) * 0.08 : feliz ? 1.35 : 1,
+    energia: dormindo
+      ? 0.55 + Math.sin(t * 1.2) * 0.08
+      : feliz
+        ? 1.35
+        : pet.agente === 'precisa'
+          ? 1.25 + Math.sin(t * 5) * 0.2 // pisca chamando
+          : pet.agente
+            ? 1.15
+            : 1,
   });
   sono(dormindo, xDaTela(), yDaTela() - RAIO);
+  atualizarAgente(agora);
+  seguirGema(xDaTela(), yDaTela() - RAIO);
 }
 
 function quadro() {

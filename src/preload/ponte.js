@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('icozinho', {
   aoMoverCursor: (callback) => ipcRenderer.on('cursor', (_e, ponto) => callback(ponto)),
   /** Escondido ou mostrado pela bandeja. */
   aoMudarVisivel: (callback) => ipcRenderer.on('visivel', (_e, visivel) => callback(visivel)),
+  /** Um evento do Claude Code (hook), já enxuto pelo retransmissor. */
+  aoEventoDoAgente: (callback) => ipcRenderer.on('agente', (_e, evento) => callback(evento)),
 });

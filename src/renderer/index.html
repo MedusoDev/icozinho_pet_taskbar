@@ -50,6 +50,39 @@
       to   { transform: translate(-50%, -50%) rotate(360deg) translateX(26px) rotate(-360deg); }
     }
 
+    /* O balão do Claude Code, em cima da gema */
+    #balao {
+      position: absolute;
+      left: 0;
+      top: 0;
+      max-width: 300px;
+      padding: 7px 12px 8px;
+      border-radius: 14px;
+      background: rgba(17, 12, 28, 0.92);
+      border: 1px solid rgba(167, 139, 250, 0.45);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), 0 0 18px rgba(124, 58, 237, 0.25);
+      color: #ede9fe;
+      font: 500 12.5px/1.35 'Segoe UI', sans-serif;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      white-space: nowrap;
+    }
+    #balao.visivel { opacity: 1; }
+    #balao .projeto {
+      display: block;
+      font: 600 9.5px/1.2 'Cascadia Mono', Consolas, monospace;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 2px;
+    }
+    #balao .projeto:empty { display: none; }
+    #balao .texto { display: block; overflow: hidden; text-overflow: ellipsis; }
+    #balao[data-tipo='precisa'] { border-color: rgba(251, 191, 36, 0.8); box-shadow: 0 0 22px rgba(217, 119, 6, 0.45); }
+    #balao[data-tipo='terminou'] { border-color: rgba(52, 211, 153, 0.7); }
+    #balao[data-tipo='erro'], #balao[data-tipo='aviso'] { border-color: rgba(244, 80, 94, 0.75); }
+
     #zzz { inset: auto; display: none; width: 40px; height: 40px; }
     #zzz.visivel { display: block; }
     #zzz span {
@@ -74,6 +107,7 @@
   <canvas id="cena"></canvas>
   <div id="efeitos"></div>
   <div id="zzz"><span>z</span><span>z</span><span>z</span></div>
+  <div id="balao"><span class="projeto"></span><span class="texto"></span></div>
   <script type="module" src="pet.js"></script>
 </body>
 </html>

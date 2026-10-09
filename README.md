@@ -36,8 +36,27 @@ mais simples e com a gema igual à do [portfólio](https://gabrielbarros-portfol
   no ícone esconde ou mostra.
 - **Clique atravessa**: só a gema captura o mouse; o resto da faixa não atrapalha
   o que está atrás.
+- **Acompanha o Claude Code**: ligado pela bandeja, ele mostra num balão o que
+  o Claude Code está fazendo em cada sessão (pensando, editando um arquivo,
+  rodando um comando), pula chamando quando o Claude precisa de você, comemora
+  quando termina e fica tonto se der erro. Vale para o terminal e para a aba
+  Code do app Claude. Veja [Claude Code](#claude-code).
 - **Leve**: 30 quadros por segundo andando, 15 dormindo, 60 só quando está no ar
   ou recebendo carinho; escondido, não desenha nada.
+
+## Claude Code
+
+O Icozinho acompanha o Claude Code pelos **hooks**: a cada evento, o Claude Code
+roda um retransmissor pequeno (`src/gancho/icozinho-gancho.js`), que entrega o
+evento ao Icozinho por um canal local (named pipe), sem internet.
+
+- **Para ligar:** bandeja → **Ligar ao Claude Code…**. Ele mostra exatamente o
+  que vai entrar no `~/.claude/settings.json`, guarda uma cópia de segurança e
+  só adiciona as entradas dele, sem mexer no resto.
+- **Para desligar:** bandeja → **Desligar do Claude Code**. Sai só o que é dele.
+- **Nunca trava o Claude Code:** se o Icozinho estiver fechado ou demorar mais
+  de 0,3 s, o retransmissor sai em silêncio e o Claude Code segue normalmente.
+- Precisa do **Node** instalado (é ele que roda o retransmissor).
 
 ## Stack
 
@@ -66,9 +85,13 @@ npm run dist
 src/
   main/         processo principal
     principal.js   janela, ciclo de vida e ponte com o pet
+    canal.js       recebe os eventos do Claude Code
+    ganchos.js     liga e desliga os hooks no settings.json do Claude Code
     pista.js       a faixa sobre a barra de tarefas, um chão por monitor
     bandeja.js     o ícone e o menu perto do relógio
     preferencias.js  o que ele lembra entre aberturas
+  gancho/
+    icozinho-gancho.js  o retransmissor que o Claude Code roda a cada evento
   preload/
     ponte.js       o que o pet pode pedir ao processo principal
   renderer/     o pet em si
@@ -77,6 +100,7 @@ src/
     mouse.js       cutucar, arrastar e carinho
     chao.js        onde é o chão em cada ponto
     efeitos.js     corações, zzz e estrelinhas
+    agente.js      o balão e as reações ao Claude Code
 assets/         ícones do app, do instalador e da bandeja
 ```
 

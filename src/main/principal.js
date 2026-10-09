@@ -1,9 +1,11 @@
 // O processo principal: a janela transparente sobre a barra de tarefas, a
 // bandeja e a ponte com o pet. O comportamento em si vive no renderer.
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, screen } = require('electron');
 const path = require('path');
 const { retanguloDaPista, trechosDoChao } = require('./pista');
 const { criarBandeja } = require('./bandeja');
+const { abrirCanal } = require('./canal');
+const ganchos = require('./ganchos');
 const preferencias = require('./preferencias');
 
 /** De quanto em quanto tempo o pet recebe a posição do mouse na tela toda. */
@@ -93,15 +95,74 @@ ipcMain.on('capturar-mouse', (_evento, capturar) => {
   if (janela) janela.setIgnoreMouseEvents(!capturar, { forward: true });
 });
 
+/* ── Claude Code ──────────────────────────────────────────────────── */
+
+let retransmissor = null;
+
+/** Mostra exatamente o que vai entrar no settings.json e pede o OK. */
+async function ligarClaude() {
+  const entradas = JSON.stringify({ hooks: ganchos.entradasDoIcozinho(retransmissor) }, null, 2);
+  const { response } = await dialog.showMessageBox({
+    type: 'question',
+    buttons: ['Ligar', 'Cancelar'],
+    defaultId: 0,
+    cancelId: 1,
+    title: 'Ligar o Icozinho ao Claude Code',
+    message: 'O Icozinho vai acompanhar as sessões do Claude Code.',
+    detail:
+      `Vou adicionar estas entradas em ${ganchos.arquivoDoClaude()}, ` +
+      'sem mexer no resto do arquivo, e guardar uma cópia de segurança antes:\n\n' +
+      entradas +
+      '\n\nSe o Icozinho estiver fechado, o Claude Code segue normalmente.',
+  });
+  if (response !== 0) return;
+  try {
+    const copia = ganchos.instalar(retransmissor);
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Icozinho ligado',
+      message: 'Pronto: as próximas sessões do Claude Code já aparecem no Icozinho.',
+      detail: copia ? `Cópia de segurança: ${copia}` : 'Não havia settings.json; criei um novo.',
+    });
+  } catch (erro) {
+    dialog.showErrorBox('Não deu para ligar', erro.message);
+  }
+}
+
+async function desligarClaude() {
+  try {
+    const copia = ganchos.desinstalar();
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Icozinho desligado',
+      message: 'Tirei do settings.json só o que era do Icozinho.',
+      detail: copia ? `Cópia de segurança: ${copia}` : '',
+    });
+  } catch (erro) {
+    dialog.showErrorBox('Não deu para desligar', erro.message);
+  }
+}
+
+/** Cada evento do Claude Code vai direto para o pet reagir. */
+function aoEventoDoClaude(evento, conexao) {
+  conexao.end(); // na 0.2.0 ninguém espera resposta
+  if (janela && !janela.isDestroyed()) janela.webContents.send('agente', evento);
+}
+
 app.whenReady().then(() => {
   prefs = preferencias.ler();
   app.setLoginItemSettings({ openAtLogin: prefs.iniciarComWindows });
   criarJanela();
+  retransmissor = ganchos.prepararRetransmissor();
+  abrirCanal(aoEventoDoClaude);
   bandeja = criarBandeja({
     estaVisivel: () => Boolean(janela && janela.isVisible()),
     alternarVisivel,
     iniciaComWindows: () => prefs.iniciarComWindows,
     definirInicio,
+    ligadoAoClaude: () => ganchos.estaInstalado(),
+    ligarClaude,
+    desligarClaude,
     sair: () => app.quit(),
   });
 
