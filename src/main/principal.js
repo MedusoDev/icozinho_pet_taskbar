@@ -9,6 +9,7 @@ const { abrirCanal } = require('./canal');
 const ganchos = require('./ganchos');
 const ilha = require('./ilha');
 const sessoes = require('./sessoes');
+const conversa = require('./conversa');
 const preferencias = require('./preferencias');
 
 /** De quanto em quanto tempo o pet recebe a posição do mouse na tela toda. */
@@ -278,7 +279,12 @@ ipcMain.on('ajustar', (_e, { chave, valor }) => {
 ipcMain.on('ligar-claude', () => ligarClaude());
 ipcMain.on('desligar-claude', () => desligarClaude());
 
-
+ipcMain.on('conversa-enviar', (_e, texto) => {
+  if (typeof texto !== 'string' || !texto.trim()) return;
+  conversa.enviar(texto.slice(0, 8000), (ev) => ilha.enviar('conversa', ev));
+});
+ipcMain.on('conversa-parar', () => conversa.cancelar());
+ipcMain.on('conversa-nova', () => conversa.nova());
 
 /* ── começo e fim ─────────────────────────────────────────────────── */
 
@@ -295,6 +301,7 @@ app.whenReady().then(() => {
     atualizarTudo();
   });
   retransmissor = ganchos.prepararRetransmissor();
+  conversa.configurar({ node: ganchos.caminhoDoNode(), retransmissor });
   abrirCanal(aoEventoDoClaude);
   bandeja = criarBandeja({
     abrirIlha: () => ilha.enviar('pedir-abrir', { focar: true }),
@@ -317,6 +324,7 @@ app.whenReady().then(() => {
 });
 
 app.on('second-instance', () => ilha.enviar('pedir-abrir', { focar: true }));
+app.on('before-quit', () => conversa.cancelar());
 
 // Fechar uma janela não encerra: o Icozinho só sai pela bandeja.
 app.on('window-all-closed', (evento) => evento.preventDefault());

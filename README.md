@@ -32,8 +32,8 @@ mais simples e com a gema igual à do [portfólio](https://gabrielbarros-portfol
 - **Carinho**: passe o mouse em vai-e-vem por cima dele e saem coraçõezinhos.
 - **Tédio e sono**: sem ninguém mexendo, dá pulinhos; depois de 3 minutos,
   dorme (zzz). Chegar perto ou clicar acorda, assustado.
-- **Bandeja**: esconder ou mostrar, iniciar com o Windows e sair. Clique duplo
-  no ícone esconde ou mostra.
+- **Bandeja**: abrir a doca, soltar ou prender o pet, iniciar com o Windows,
+  ligar ao Claude Code e sair. Clique duplo no ícone abre a doca.
 - **Clique atravessa**: só a gema captura o mouse; o resto da faixa não atrapalha
   o que está atrás.
 - **Acompanha o Claude Code**: ligado pela bandeja, ele mostra num balão o que
@@ -42,9 +42,25 @@ mais simples e com a gema igual à do [portfólio](https://gabrielbarros-portfol
   quando termina e fica tonto se der erro. Vale para o terminal e para a aba
   Code do app Claude. Veja [Claude Code](#claude-code).
 - **Aprova e responde pelo Icozinho**: quando o Claude Code pede permissão, um
-  cartão em cima da gema mostra o que ele quer fazer (o comando inteiro, o
-  arquivo) com **Permitir**, **Negar** e **No terminal**. Perguntas de múltipla
-  escolha aparecem com as opções como botões, uma pergunta por vez.
+  cartão na doca mostra o que ele quer fazer (o comando inteiro, o arquivo) com
+  **Permitir**, **Negar** e **No terminal**. Perguntas de múltipla escolha
+  aparecem com as opções como botões, uma por vez, e **Outro…** para responder
+  escrevendo. Cutucar o pet com um pedido esperando abre a doca.
+- **A doca**: escondida na borda direita da tela (ou na esquerda, ou no
+  topo), como a barra de tarefas com "ocultar automaticamente". Escondida, é só
+  um fio de luz na cor do que o Claude está fazendo (roxo trabalhando, âmbar
+  precisando de você, verde pronto). Encoste o mouse na borda e sai uma aba com
+  a gema; um clique abre o painel:
+  - **Sessões**: todas as sessões abertas, com o estado e o passo de cada uma,
+    e os pedidos de permissão e as perguntas esperando você
+  - **Conversa**: um chat com o Claude, usando a sua assinatura (sem chave de
+    API)
+  - **Ajustes**: pet solto ou preso, lugar da doca, sons, iniciar com o Windows
+    e a ligação com o Claude Code
+  - **📌 Prender e soltar**: preso, o Icozinho sai da barra de tarefas e fica só
+    na doca; solto, volta a passear
+  Quando chega um pedido, o painel abre sozinho (sem roubar o foco de quem está
+  digitando ou jogando) e toca um aviso.
 - **Leve**: 30 quadros por segundo andando, 15 dormindo, 60 só quando está no ar
   ou recebendo carinho; escondido, não desenha nada.
 
@@ -67,6 +83,21 @@ evento ao Icozinho por um canal local (named pipe), sem internet.
 - Quem ligou numa versão anterior vê **Atualizar ligação ao Claude Code…** na
   bandeja.
 - Precisa do **Node** instalado (é ele que roda o retransmissor).
+
+## Conversa
+
+A aba Conversa da doca usa o próprio Claude Code em modo de comando
+(`claude -p`), com o login da sua assinatura. Ele procura o `claude` do
+terminal e, se não houver, usa o que vem dentro do app Claude (inclusive na
+versão da Microsoft Store, que guarda os arquivos numa pasta virtualizada). A
+conversa roda numa pasta só dela, longe dos seus projetos, e não aparece na
+lista de sessões.
+
+Quando ele precisa de permissão para rodar algo (fechar um programa, por
+exemplo), o cartão com **Permitir** e **Negar** aparece ali mesmo, no meio da
+conversa. Isso vem de um `settings.json` só da pasta da conversa, com um gancho
+de permissão: vale para a conversa e para mais nada no seu computador. Sem
+resposta em 110 s, o pedido é negado.
 
 ## Stack
 
@@ -97,13 +128,24 @@ src/
     principal.js   janela, ciclo de vida e ponte com o pet
     canal.js       recebe os eventos do Claude Code
     ganchos.js     liga e desliga os hooks no settings.json do Claude Code
+    sessoes.js     as sessões abertas, para a doca listar
+    ilha.js        a janela da doca: borda, posição e tamanhos
+    conversa.js    o chat, via claude -p
     pista.js       a faixa sobre a barra de tarefas, um chão por monitor
     bandeja.js     o ícone e o menu perto do relógio
     preferencias.js  o que ele lembra entre aberturas
   gancho/
     icozinho-gancho.js  o retransmissor que o Claude Code roda a cada evento
+  compartilhado/
+    passos.js      como descrever cada passo do Claude ("Editando pet.js")
   preload/
     ponte.js       o que o pet pode pedir ao processo principal
+    ponte_ilha.js  o que a doca pode pedir ao processo principal
+  ilha/         a doca da borda
+    ilha.js        fio, aba, painel e modos
+    cartao.js      o cartão de permissão e de pergunta
+    conversa.js    a aba de chat
+    sons.js        os avisos sonoros, sintetizados
   renderer/     o pet em si
     pet.js         cena, estado, modos e o relógio de cada quadro
     gema.js        o icosaendro da marca
@@ -111,7 +153,6 @@ src/
     chao.js        onde é o chão em cada ponto
     efeitos.js     corações, zzz e estrelinhas
     agente.js      o balão e as reações ao Claude Code
-    cartao.js      o cartão de permissão e de pergunta
 assets/         ícones do app, do instalador e da bandeja
 ```
 

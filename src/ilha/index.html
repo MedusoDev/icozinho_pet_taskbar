@@ -294,6 +294,7 @@
     <header>
       <img src="../../assets/icone.png" alt="" />
       <button class="aba ativa" data-aba="sessoes" type="button">Sessões</button>
+      <button class="aba" data-aba="conversa" type="button">Conversa</button>
       <span class="espaco"></span>
       <button id="botao-prender" class="icone" type="button">📌</button>
       <button id="botao-som" class="icone" type="button" title="Sons">♪</button>
@@ -304,6 +305,17 @@
     <section id="aba-sessoes" class="aba-conteudo ativa">
       <div id="pedidos" style="display: flex; flex-direction: column; gap: 8px"></div>
       <div id="lista-sessoes" style="display: flex; flex-direction: column; gap: 6px"></div>
+    </section>
+
+    <section id="aba-conversa" class="aba-conteudo">
+      <div id="mensagens"></div>
+      <div class="entrada">
+        <textarea id="campo-conversa" rows="2" placeholder="Fala comigo… (Enter envia, Shift+Enter quebra a linha)"></textarea>
+        <div class="botoes">
+          <button id="nova-conversa" class="botao discreto" type="button">Conversa nova</button>
+          <button id="enviar-conversa" class="botao primario" type="button">Enviar</button>
+        </div>
+      </div>
     </section>
 
     <section id="aba-ajustes" class="aba-conteudo">

@@ -10,6 +10,7 @@
 // depois de usar, ou quando o pedido que a abriu foi resolvido.
 import { montarCartao } from './cartao.js';
 import { tocar } from './sons.js';
+import { focarConversa, ligarConversa, mostrarPedidosDaConversa } from './conversa.js';
 import { cortar, descreverPasso, ERROS } from '../compartilhado/passos.js';
 
 const $ = (id) => document.getElementById(id);
@@ -67,6 +68,7 @@ function mostrarAba(nome) {
   abaAtual = nome;
   for (const b of document.querySelectorAll('[data-aba]')) b.classList.toggle('ativa', b.dataset.aba === nome);
   for (const s of document.querySelectorAll('.aba-conteudo')) s.classList.toggle('ativa', s.id === `aba-${nome}`);
+  if (nome === 'conversa') focarConversa();
 }
 
 /* ── o fio e a aba ────────────────────────────────────────────────── */
@@ -175,6 +177,7 @@ function desenharSessoes() {
 
 function desenharPedidos() {
   // Os da conversa aparecem na aba Conversa; aqui ficam os das sessões.
+  mostrarPedidosDaConversa(estado.pedidos.filter((p) => p.conversa));
   const area = $('pedidos');
   const dasSessoes = estado.pedidos.filter((p) => !p.conversa);
   const ids = new Set(dasSessoes.map((p) => p.id));
@@ -314,3 +317,5 @@ document.addEventListener('keydown', (e) => {
 
 // "há 3 min" envelhece sozinho
 setInterval(() => modo === 'aberta' && desenharSessoes(), 30_000);
+
+ligarConversa();
