@@ -1,0 +1,47 @@
+{
+  "name": "icozinho_pet_taskbar",
+  "version": "0.1.0",
+  "description": "Icozinho: o icosaendro de estimação que vive na barra de tarefas do Windows",
+  "main": "src/main/principal.js",
+  "private": true,
+  "author": "MedusoDev",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.medusodev.icozinho",
+    "productName": "Icozinho",
+    "copyright": "Copyright © 2026 MedusoDev",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/three/build/three.module.js",
+      "node_modules/three/build/three.core.js",
+      "node_modules/three/examples/jsm/environments/RoomEnvironment.js"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": "x64" }],
+      "icon": "assets/icone.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Icozinho"
+    }
+  }
+}
